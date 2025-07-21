@@ -1,6 +1,8 @@
 package org.example.brev.service;
 
 import org.example.brev.entity.UrlMapping;
+import org.example.brev.exception.ShortCodeGenerationException;
+import org.example.brev.exception.ShortCodeNotFoundException;
 import org.example.brev.repository.UrlMappingRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -139,7 +141,7 @@ class UrlServiceTest {
 
             // When & Then
             assertThatThrownBy(() -> urlService.createShortUrl(testLongUrl))
-                    .isInstanceOf(RuntimeException.class)
+                    .isInstanceOf(ShortCodeGenerationException.class)
                     .hasMessage("Unable to generate unique short code after 5 attempts");
         }
     }
@@ -173,7 +175,7 @@ class UrlServiceTest {
 
             // When & Then
             assertThatThrownBy(() -> urlService.getLongUrl(nonExistentCode))
-                    .isInstanceOf(RuntimeException.class)
+                    .isInstanceOf(ShortCodeNotFoundException.class)
                     .hasMessage("Short code not found: " + nonExistentCode);
         }
 
@@ -392,6 +394,23 @@ class UrlServiceTest {
 
             // Then
             verify(urlMappingRepository).findByLongUrl(mixedCaseUrl);
+        }
+
+        @Test
+        @DisplayName("Should preserve case-sensitive URL components")
+        void shouldPreserveCaseSensitiveUrlComponents() {
+            // Given
+            String urlWithCaseSensitiveComponents = "example.com/API/Users?token=aBc123XyZ&userId=ABC123#Profile-Section";
+            String expectedNormalizedUrl = "https://example.com/API/Users?token=aBc123XyZ&userId=ABC123#Profile-Section";
+            when(urlMappingRepository.findByLongUrl(expectedNormalizedUrl)).thenReturn(Optional.empty());
+            when(urlMappingRepository.existsByShortCode(anyString())).thenReturn(false);
+            when(urlMappingRepository.save(any(UrlMapping.class))).thenReturn(testUrlMapping);
+
+            // When
+            urlService.createShortUrl(urlWithCaseSensitiveComponents);
+
+            // Then
+            verify(urlMappingRepository).findByLongUrl(expectedNormalizedUrl);
         }
     }
 }
