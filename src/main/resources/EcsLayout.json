@@ -1,0 +1,11 @@
+{
+  "timestamp": "${json:timestamp}",
+  "level": "${json:level}",
+  "logger": "${json:logger}",
+  "thread": "${json:thread}",
+  "message": "${json:message}",
+  "exception": "${json:exception}",
+  "application": "brev-url-shortener",
+  "environment": "${env:SPRING_PROFILES_ACTIVE:-local}"
+}
+
