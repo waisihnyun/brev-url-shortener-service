@@ -8,7 +8,7 @@ public class ShortCodeNotFoundException extends UrlServiceException {
     private final String shortCode;
 
     public ShortCodeNotFoundException(String shortCode) {
-        super("Short code not found: " + shortCode);
+        super(String.format("Short code '%s' not found", shortCode));
         this.shortCode = shortCode;
     }
 

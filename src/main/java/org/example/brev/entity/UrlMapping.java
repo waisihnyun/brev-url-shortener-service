@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import org.example.brev.validation.ValidLongUrl;
 import org.hibernate.validator.constraints.URL;
 
 import java.time.LocalDateTime;
@@ -17,9 +18,7 @@ public class UrlMapping {
     private Long id;
 
     @Column(name = "long_url", nullable = false, length = 2048)
-    @NotBlank(message = "Long URL cannot be blank")
-    @URL(message = "Long URL must be a valid URL")
-    @Size(max = 2048, message = "Long URL cannot exceed 2048 characters")
+    @ValidLongUrl
     private String longUrl;
 
     @Column(name = "short_code", nullable = false, unique = true, length = 10)

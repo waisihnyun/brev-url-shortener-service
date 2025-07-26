@@ -24,6 +24,7 @@ public class UrlService {
     private static final String CHARACTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     private static final int SHORT_CODE_LENGTH = 6;
     private static final int MAX_RETRY_ATTEMPTS = 5;
+    private static final int MAX_URL_LENGTH = 2048;
 
     private final UrlMappingRepository urlMappingRepository;
     private final SecureRandom secureRandom;
@@ -48,6 +49,13 @@ public class UrlService {
         if (longUrl == null || longUrl.trim().isEmpty()) {
             logger.warn("Attempt to create short URL with null or empty long URL");
             throw new IllegalArgumentException("Long URL cannot be null or empty");
+        }
+
+        // Validate URL length
+        if (longUrl.length() > MAX_URL_LENGTH) {
+            logger.warn("Attempt to create short URL with URL length {} exceeding maximum of {} characters",
+                       longUrl.length(), MAX_URL_LENGTH);
+            throw new IllegalArgumentException("Long URL cannot exceed " + MAX_URL_LENGTH + " characters");
         }
 
         // Normalize URL (ensure it has protocol)
