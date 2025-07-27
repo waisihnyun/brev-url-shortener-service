@@ -27,6 +27,9 @@ class UrlServiceTest {
     @Mock
     private UrlMappingRepository urlMappingRepository;
 
+    @Mock
+    private RedisCacheService redisCacheService;
+
     @InjectMocks
     private UrlService urlService;
 

@@ -3,7 +3,6 @@ package org.example.brev.repository;
 import org.example.brev.entity.UrlMapping;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +37,11 @@ public interface UrlMappingRepository extends JpaRepository<UrlMapping, Long> {
      * Find all URL mappings created between two dates
      */
     List<UrlMapping> findByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate);
+
+    /**
+     * Find all URL mappings created before a specific date
+     */
+    List<UrlMapping> findByCreatedAtBefore(LocalDateTime date);
 
     /**
      * Delete URL mappings older than specified date
