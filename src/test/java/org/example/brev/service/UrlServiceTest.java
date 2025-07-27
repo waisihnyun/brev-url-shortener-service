@@ -176,7 +176,7 @@ class UrlServiceTest {
             // When & Then
             assertThatThrownBy(() -> urlService.getLongUrl(nonExistentCode))
                     .isInstanceOf(ShortCodeNotFoundException.class)
-                    .hasMessage("Short code not found: " + nonExistentCode);
+                    .hasMessage(String.format("Short code '%s' not found", nonExistentCode));
         }
 
         @Test
