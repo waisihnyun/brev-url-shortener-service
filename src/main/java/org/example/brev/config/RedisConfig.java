@@ -11,7 +11,6 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 /**
  * Redis configuration class for setting up Redis connection and templates
  */
-@Getter
 @Configuration
 public class RedisConfig {
 
