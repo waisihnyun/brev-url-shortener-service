@@ -15,8 +15,8 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 public class RedisConfig {
 
     /**
-     * -- GETTER --
-     *  Get the TTL configuration for URL mappings
+     * Time-to-live (TTL) configuration for URL mappings in the cache.
+     * This value is loaded from the application properties and defaults to 3600 seconds (1 hour).
      */
     @Value("${app.cache.url-mapping.ttl:3600}")
     private long urlMappingTtl;
