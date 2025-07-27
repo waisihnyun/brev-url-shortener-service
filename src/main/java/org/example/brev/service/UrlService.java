@@ -6,7 +6,6 @@ import org.example.brev.entity.UrlMapping;
 import org.example.brev.exception.ShortCodeGenerationException;
 import org.example.brev.exception.ShortCodeNotFoundException;
 import org.example.brev.repository.UrlMappingRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,10 +26,13 @@ public class UrlService {
     private static final int MAX_URL_LENGTH = 2048;
 
     private final UrlMappingRepository urlMappingRepository;
+    private final RedisCacheService redisCacheService;
     private final SecureRandom secureRandom;
 
-    public UrlService(final UrlMappingRepository urlMappingRepository) {
+    public UrlService(final UrlMappingRepository urlMappingRepository,
+                     final RedisCacheService redisCacheService) {
         this.urlMappingRepository = urlMappingRepository;
+        this.redisCacheService = redisCacheService;
         this.secureRandom = new SecureRandom();
     }
 
@@ -80,6 +82,9 @@ public class UrlService {
         UrlMapping urlMapping = new UrlMapping(normalizedUrl, shortCode);
         UrlMapping savedMapping = urlMappingRepository.save(urlMapping);
 
+        // Cache the new URL mapping in Redis for future lookups
+        redisCacheService.cacheUrlMapping(shortCode, normalizedUrl);
+
         logger.info("Successfully created short URL mapping - Long URL: {}, Short Code: {}, ID: {}",
                    normalizedUrl, shortCode, savedMapping.getId());
         auditLogger.info("URL_CREATION - URL: {}, ShortCode: {}, ID: {}, Timestamp: {}",
@@ -90,6 +95,7 @@ public class UrlService {
 
     /**
      * Retrieves the original long URL using the short code
+     * Uses Redis cache-aside pattern: check cache first, then database if cache miss
      *
      * @param shortCode The short code to look up
      * @return The original long URL
@@ -108,7 +114,18 @@ public class UrlService {
 
         String trimmedShortCode = shortCode.trim();
 
-        // Find URL mapping
+        // Step 1: Check Redis cache first
+        String cachedLongUrl = redisCacheService.getCachedUrlMapping(trimmedShortCode);
+        if (cachedLongUrl != null) {
+            logger.info("Cache hit - Retrieved long URL from Redis for short code: {} -> {}",
+                       trimmedShortCode, cachedLongUrl);
+            auditLogger.info("URL_LOOKUP_SUCCESS_CACHE - ShortCode: {}, URL: {}",
+                           trimmedShortCode, cachedLongUrl);
+            return cachedLongUrl;
+        }
+
+        // Step 2: Cache miss - fetch from database
+        logger.debug("Cache miss - Fetching from database for short code: {}", trimmedShortCode);
         Optional<UrlMapping> urlMapping = urlMappingRepository.findByShortCode(trimmedShortCode);
 
         if (urlMapping.isEmpty()) {
@@ -118,8 +135,13 @@ public class UrlService {
         }
 
         String longUrl = urlMapping.get().getLongUrl();
-        logger.info("Successfully retrieved long URL for short code: {} -> {}", trimmedShortCode, longUrl);
-        auditLogger.info("URL_LOOKUP_SUCCESS - ShortCode: {}, URL: {}", trimmedShortCode, longUrl);
+
+        // Step 3: Store in Redis cache for future requests
+        redisCacheService.cacheUrlMapping(trimmedShortCode, longUrl);
+
+        logger.info("Successfully retrieved long URL from database for short code: {} -> {}",
+                   trimmedShortCode, longUrl);
+        auditLogger.info("URL_LOOKUP_SUCCESS_DB - ShortCode: {}, URL: {}", trimmedShortCode, longUrl);
 
         return longUrl;
     }
@@ -166,20 +188,43 @@ public class UrlService {
 
     /**
      * Deletes URL mappings older than the specified date
+     * Also invalidates cache entries for deleted mappings
      *
      * @param cutoffDate The date before which mappings should be deleted
      */
     public void deleteOldMappings(LocalDateTime cutoffDate) {
         if (cutoffDate != null) {
             logger.info("Deleting URL mappings older than: {}", cutoffDate);
+
+            // Get mappings to be deleted for cache invalidation
+            var mappingsToDelete = urlMappingRepository.findByCreatedAtBefore(cutoffDate);
+
             long countBefore = urlMappingRepository.count();
             urlMappingRepository.deleteByCreatedAtBefore(cutoffDate);
             long countAfter = urlMappingRepository.count();
             long deletedCount = countBefore - countAfter;
-            logger.info("Successfully deleted {} URL mappings older than {}", deletedCount, cutoffDate);
+
+            // Invalidate cache entries for deleted mappings
+            mappingsToDelete.forEach(mapping ->
+                redisCacheService.evictUrlMapping(mapping.getShortCode()));
+
+            logger.info("Successfully deleted {} URL mappings older than {} and invalidated cache entries",
+                       deletedCount, cutoffDate);
             auditLogger.info("URL_CLEANUP - DeletedCount: {}, CutoffDate: {}", deletedCount, cutoffDate);
         } else {
             logger.warn("Attempted to delete old mappings with null cutoff date");
+        }
+    }
+
+    /**
+     * Manually evict a URL mapping from cache
+     *
+     * @param shortCode The short code to evict from cache
+     */
+    public void evictFromCache(String shortCode) {
+        if (shortCode != null && !shortCode.trim().isEmpty()) {
+            redisCacheService.evictUrlMapping(shortCode.trim());
+            logger.info("Manually evicted short code from cache: {}", shortCode);
         }
     }
 
