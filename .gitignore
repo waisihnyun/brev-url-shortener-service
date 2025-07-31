@@ -1,10 +1,59 @@
-HELP.md
+# Compiled class files
+*.class
+
+# Log files
+*.log
+
+# BlueJ files
+*.ctxt
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Virtual machine crash logs
+hs_err_pid*
+replay_pid*
+
+# Maven
 target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
 .mvn/wrapper/maven-wrapper.jar
+
+# Gradle
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-### STS ###
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+# Eclipse
 .apt_generated
 .classpath
 .factorypath
@@ -12,35 +61,83 @@ target/
 .settings
 .springBeans
 .sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
 
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-
-### NetBeans ###
+# NetBeans
 /nbproject/private/
 /nbbuild/
 /dist/
 /nbdist/
 /.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
 
-### VS Code ###
+# VS Code
 .vscode/
+
+# OS Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Spring Boot
+*.pid
+*.seed
+*.pid.lock
+
+# Application logs
+logs/
+*.log.*
+*.gz
+
+# Test results and reports
+/test-results/
+/test-outputs/
+surefire-reports/
+
+# H2 Database files (if using H2 for testing)
+*.db
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Docker
+.dockerignore
 
 ### Sensitive Configuration Files ###
 src/main/resources/application-local.properties
 src/main/resources/application-dev.properties
 src/main/resources/application-prod.properties
-*.env
-.env
-.env.local
-.env.*.local
 
-### OS ###
-.DS_Store
-Thumbs.db
+# Generated files
+generated/
+.generated/
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Node modules (if using frontend tools)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Coverage reports
+coverage/
+*.lcov
+
+# SonarQube
+.sonar/
+.scannerwork/
